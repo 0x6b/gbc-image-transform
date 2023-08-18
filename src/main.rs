@@ -134,7 +134,7 @@ fn reduce_colors(image: &mut Image, palette: &[Rgb<u8>]) {
         let closest_color = palette
             .iter()
             .copied()
-            .min_by_key(|&color| compute_squared_distance(color, pixel.to_rgb()))
+            .min_by_key(|&color| compute_squared_distance(&color, &pixel.to_rgb()))
             .unwrap_or_else(|| Rgb([0, 0, 0]));
 
         *pixel = Rgba([
@@ -159,7 +159,7 @@ fn reduce_colors(image: &mut Image, palette: &[Rgb<u8>]) {
 /// # Returns
 ///
 /// * An `u32` - The computed squared Euclidean distance.
-fn compute_squared_distance(first_color: Rgb<u8>, second_color: Rgb<u8>) -> u32 {
+fn compute_squared_distance(first_color: &Rgb<u8>, second_color: &Rgb<u8>) -> u32 {
     // cast to i32 to avoid subtraction overflow
     let red_diff = first_color[0] as i32 - second_color[0] as i32;
     let green_diff = first_color[1] as i32 - second_color[1] as i32;
