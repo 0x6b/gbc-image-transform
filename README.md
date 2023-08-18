@@ -1,6 +1,6 @@
 # gbc-image-transform
 
-A CLI to generate Game Boy Color lookalike images from a PNG image.
+A CLI to generate Game Boy Color lookalike images from an image.
 
 The Game Boy Color can display any combination of 32,768 different colors (15-bit RGB), but at any given time, it can display only up to 56 different colors (ref.: [Game Boy Color - Wikipedia](https://en.wikipedia.org/wiki/Game_Boy_Color#Technical_specifications)).
 
@@ -38,6 +38,10 @@ Options:
   -V, --version
           Print version
 ```
+
+### Supported Image Formats
+
+The CLI should support any image format supported by the [image](https://crates.io/crates/image) crate, but tested with JPEG and PNG. The format is determined from the `path`'s file extension.
 
 ## License
 
