@@ -1,8 +1,8 @@
 [package]
-name = "dngized"
+name = "gbc-image-transform"
 version = "0.1.0"
 edition = "2021"
-description = "A CLI to generate Game Boy Color lookalike images from a PNG image"
+description = "Generate Game Boy Color lookalike images from a PNG image."
 
 [dependencies]
 # for easier error handling

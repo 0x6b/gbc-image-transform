@@ -252,17 +252,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7a81dae078cea95a014a339291cec439d2f232ebe854a9d672b796c6afafa9b7"
 
 [[package]]
-name = "dngized"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "clap 4.3.22",
- "image",
- "kmeans_colors",
- "palette",
-]
-
-[[package]]
 name = "either"
 version = "1.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -354,6 +343,17 @@ name = "futures-sink"
 version = "0.3.28"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f43be4fe21a13b9781a69afa4985b0f6ee0e1afab2c6f454a8cf30e2b2237b6e"
+
+[[package]]
+name = "gbc-image-transform"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "clap 4.3.22",
+ "image",
+ "kmeans_colors",
+ "palette",
+]
 
 [[package]]
 name = "getrandom"
