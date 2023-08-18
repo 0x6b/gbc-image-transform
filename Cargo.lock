@@ -346,7 +346,7 @@ checksum = "f43be4fe21a13b9781a69afa4985b0f6ee0e1afab2c6f454a8cf30e2b2237b6e"
 
 [[package]]
 name = "gbc-image-transform"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "anyhow",
  "clap 4.3.22",
