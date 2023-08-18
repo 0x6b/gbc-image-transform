@@ -93,6 +93,14 @@ fn find_palette(image: &Image, num_colors: usize, transparent: bool) -> Result<V
                 (color.blue * 255f32) as u8,
             ])
         })
+        .map(|color| {
+            // reduce the color to 5 bits per channel, means 15-bit color
+            Rgb([
+                (color[0] >> 3) << 3,
+                (color[1] >> 3) << 3,
+                (color[2] >> 3) << 3,
+            ])
+        })
         .collect())
 }
 
