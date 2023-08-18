@@ -9,6 +9,8 @@ use image::{
 };
 use kmeans_colors::get_kmeans;
 use palette::{cast::ComponentsAs, FromColor, Srgb, Srgba};
+use tracing::info;
+use tracing_subscriber::FmtSubscriber;
 
 type Image = ImageBuffer<Rgba<u8>, Vec<u8>>;
 
@@ -21,9 +23,16 @@ fn main() -> Result<()> {
         transparent,
     } = Args::parse();
 
+    let subscriber = FmtSubscriber::builder().finish();
+    tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
+
+    info!("loading image from {}", input);
     let mut image = get_pixelated_image(&input, pixelation_factor)?;
+    info!("finding palette");
     let palette = find_palette(&image, num_colors, transparent)?;
+    info!("reducing colors");
     reduce_colors(&mut image, &palette);
+    info!("saving image to {}", output);
     image.save(output)?;
 
     Ok(())
