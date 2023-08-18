@@ -17,5 +17,12 @@ image = "0.24.7"
 # for calculating reduced color palettes
 kmeans_colors = "0.6.0"
 palette = "0.7.3"
+
+# logging
 tracing = "0.1.37"
 tracing-subscriber = "0.3.17"
+
+[profile.release]
+codegen-units = 1
+lto = true
+strip = true
