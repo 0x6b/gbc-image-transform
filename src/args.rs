@@ -18,4 +18,8 @@ pub struct Args {
     /// Number of colors to use
     #[clap(short, long, default_value = "56")]
     pub num_colors: usize,
+
+    /// Whether to include transparent pixels in the color palette
+    #[clap(short, long)]
+    pub transparent: bool,
 }

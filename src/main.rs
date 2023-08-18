@@ -18,10 +18,11 @@ fn main() -> Result<()> {
         output,
         pixelation_factor,
         num_colors,
+        transparent,
     } = Args::parse();
 
     let mut image = get_pixelated_image(&input, pixelation_factor)?;
-    let palette = find_palette(&image, num_colors)?;
+    let palette = find_palette(&image, num_colors, transparent)?;
     reduce_colors(&mut image, &palette);
     image.save(output)?;
 
@@ -65,18 +66,20 @@ fn get_pixelated_image(image_path: &str, pixelation_factor: u32) -> Result<Image
 ///
 /// - `image` - A reference to the image for which the color palette is to be obtained.
 /// - `num_colors` - The desired number of colors in the resulting color palette.
+/// - `transparent` - A boolean value that indicates whether transparent pixels should be included
+///   in the color palette.
 ///
 /// # Returns
 ///
 /// A `Result` which is `Ok` when the palette could be found successfully. The `Ok` variant wraps a
 /// `Vec` of `Rgb`. Each `Rgb` instance represents a color from the palette. In case of an error,
 /// the `Err` variant is returned.
-fn find_palette(image: &Image, num_colors: usize) -> Result<Vec<Rgb<u8>>> {
+fn find_palette(image: &Image, num_colors: usize, transparent: bool) -> Result<Vec<Rgb<u8>>> {
     let img_vec: &[Srgba<u8>] = image.as_raw().components_as();
 
     let rgb_pixels = img_vec
         .iter()
-        .filter(|&pixel| pixel.alpha != 255)
+        .filter(|&pixel| !transparent || pixel.alpha == 255)
         .map(|pixel| Srgb::<f32>::from_color(pixel.into_format::<_, f32>()))
         .collect::<Vec<_>>();
 
