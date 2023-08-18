@@ -1,0 +1,19 @@
+[package]
+name = "dngized"
+version = "0.1.0"
+edition = "2021"
+description = "A CLI to generate Game Boy Color lookalike images from a PNG image"
+
+[dependencies]
+# for easier error handling
+anyhow = "1.0.74"
+
+# for parsing command line arguments
+clap = { version = "4.3.21", features = ["derive"] }
+
+# for reading and writing PNG images
+image = "0.24.7"
+
+# for calculating reduced color palettes
+kmeans_colors = "0.6.0"
+palette = "0.7.3"
