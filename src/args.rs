@@ -11,7 +11,7 @@ pub struct Args {
     #[clap(short, long, default_value = "output.png")]
     pub output: String,
 
-    /// Pixelation factor
+    /// Pixelation factor. Larger values result in more pixelation
     #[clap(short, long, default_value = "4")]
     pub pixelation_factor: u32,
 

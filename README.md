@@ -17,7 +17,7 @@ $ cargo install --git https://github.com/0x6b/gbc-image-transform
 
 ```console
 $ gbc-image-transform --help
-Generate Game Boy Color lookalike images from a PNG image.
+Generate Game Boy Color lookalike image from an image.
 
 Usage: gbc-image-transform [OPTIONS] <INPUT>
 
@@ -28,7 +28,7 @@ Options:
   -o, --output <OUTPUT>
           Path to the output image [default: output.png]
   -p, --pixelation-factor <PIXELATION_FACTOR>
-          Pixelation factor [default: 4]
+          Pixelation factor. Larger values result in more pixelation [default: 4]
   -n, --num-colors <NUM_COLORS>
           Number of colors to use [default: 56]
   -t, --transparent
