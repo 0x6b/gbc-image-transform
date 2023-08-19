@@ -41,7 +41,7 @@ Options:
 
 ### Supported Image Formats
 
-The CLI should support any image format supported by the [image](https://crates.io/crates/image) crate, but tested with JPEG and PNG. The format is determined from the `path`'s file extension.
+The CLI should support any image format supported by the [image](https://crates.io/crates/image) crate, but tested with JPEG and PNG. The format is determined from the extension of your input file (`<INPUT>`).
 
 ## License
 
