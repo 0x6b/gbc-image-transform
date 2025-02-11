@@ -1,16 +1,20 @@
 mod args;
-use crate::args::Args;
-
 use anyhow::Result;
 use clap::Parser;
 use image::{
     imageops::{resize, FilterType},
-    ImageBuffer, Pixel, Rgb, Rgba,
+    ImageBuffer, Rgb, Rgba,
 };
 use kmeans_colors::get_kmeans;
 use palette::{cast::ComponentsAs, FromColor, Srgb, Srgba};
+use rayon::{
+    iter::{IntoParallelRefIterator, ParallelIterator},
+};
+use rayon::slice::ParallelSliceMut;
 use tracing::info;
 use tracing_subscriber::FmtSubscriber;
+
+use crate::args::Args;
 
 type Image = ImageBuffer<Rgba<u8>, Vec<u8>>;
 
@@ -26,13 +30,13 @@ fn main() -> Result<()> {
     let subscriber = FmtSubscriber::builder().finish();
     tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
 
-    info!("loading image from {}", input);
+    info!("loading image from {input}");
     let mut image = get_pixelated_image(&input, pixelation_factor)?;
     info!("finding palette");
     let palette = find_palette(&image, num_colors, transparent)?;
     info!("reducing colors");
     reduce_colors(&mut image, &palette);
-    info!("saving image to {}", output);
+    info!("saving image to {output}");
     image.save(output)?;
 
     Ok(())
@@ -52,18 +56,14 @@ fn main() -> Result<()> {
 /// # Returns
 ///
 /// - `Result<Image>` - A Result wrapping an Image type. On success, contains the pixelated Image.
-/// On failure, contains an Error detailing what went wrong.
+///   On failure, contains an Error detailing what went wrong.
 fn get_pixelated_image(image_path: &str, pixelation_factor: u32) -> Result<Image> {
     let image = image::open(image_path)?.into_rgba8();
     let (width, height) = (image.width(), image.height());
 
     // Downscale the image to a smaller size
-    let small = resize(
-        &image,
-        width / pixelation_factor,
-        height / pixelation_factor,
-        FilterType::Nearest,
-    );
+    let small =
+        resize(&image, width / pixelation_factor, height / pixelation_factor, FilterType::Nearest);
 
     // Then upscale it back to the original size to get the pixelated effect
     Ok(resize(&small, width, height, FilterType::Nearest))
@@ -87,14 +87,14 @@ fn find_palette(image: &Image, num_colors: usize, transparent: bool) -> Result<V
     let img_vec: &[Srgba<u8>] = image.as_raw().components_as();
 
     let rgb_pixels = img_vec
-        .iter()
+        .par_iter()
         .filter(|&pixel| !transparent || pixel.alpha == 255)
         .map(|pixel| Srgb::<f32>::from_color(pixel.into_format::<_, f32>()))
         .collect::<Vec<_>>();
 
     Ok(get_kmeans(num_colors, 1, 5.0, false, &rgb_pixels, 0)
         .centroids
-        .iter()
+        .par_iter()
         .map(|&color| {
             Rgb([
                 (color.red * 255f32) as u8,
@@ -104,11 +104,7 @@ fn find_palette(image: &Image, num_colors: usize, transparent: bool) -> Result<V
         })
         .map(|color| {
             // reduce the color to 5 bits per channel, means 15-bit color
-            Rgb([
-                (color[0] >> 3) << 3,
-                (color[1] >> 3) << 3,
-                (color[2] >> 3) << 3,
-            ])
+            Rgb([(color[0] >> 3) << 3, (color[1] >> 3) << 3, (color[2] >> 3) << 3])
         })
         .collect())
 }
@@ -130,19 +126,25 @@ fn find_palette(image: &Image, num_colors: usize, transparent: bool) -> Result<V
 ///
 /// If the palette is empty, all pixel colors will become black (`Rgb([0, 0, 0])`).
 fn reduce_colors(image: &mut Image, palette: &[Rgb<u8>]) {
-    image.enumerate_pixels_mut().for_each(|(_, _, pixel)| {
+    // Obtain a mutable reference to the underlying raw pixel buffer. Each pixel consists of 4 u8 channels (RGBA)
+    let raw_pixels = image.as_mut();
+
+    raw_pixels.par_chunks_mut(4).for_each(|p| {
+        // Interpret the first three bytes as the RGB values.
+        let pixel_rgb = Rgb([p[0], p[1], p[2]]);
+
+        // Iterate sequentially over the small palette to compute the closest color.
         let closest_color = palette
             .iter()
+            .min_by_key(|&color| compute_squared_distance(&pixel_rgb, color))
             .copied()
-            .min_by_key(|&color| compute_squared_distance(&color, &pixel.to_rgb()))
-            .unwrap_or_else(|| Rgb([0, 0, 0]));
+            .unwrap_or(Rgb([0, 0, 0]));
 
-        *pixel = Rgba([
-            closest_color[0],
-            closest_color[1],
-            closest_color[2],
-            pixel[3],
-        ]);
+        // Update the pixel with the closest color, leaving the alpha channel unchanged.
+        p[0] = closest_color[0];
+        p[1] = closest_color[1];
+        p[2] = closest_color[2];
+        // p[3] (alpha) remains unchanged
     });
 }
 
