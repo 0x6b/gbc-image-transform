@@ -1,6 +1,4 @@
 mod args;
-use crate::args::Args;
-
 use anyhow::Result;
 use clap::Parser;
 use image::{
@@ -11,6 +9,8 @@ use kmeans_colors::get_kmeans;
 use palette::{cast::ComponentsAs, FromColor, Srgb, Srgba};
 use tracing::info;
 use tracing_subscriber::FmtSubscriber;
+
+use crate::args::Args;
 
 type Image = ImageBuffer<Rgba<u8>, Vec<u8>>;
 
@@ -58,12 +58,8 @@ fn get_pixelated_image(image_path: &str, pixelation_factor: u32) -> Result<Image
     let (width, height) = (image.width(), image.height());
 
     // Downscale the image to a smaller size
-    let small = resize(
-        &image,
-        width / pixelation_factor,
-        height / pixelation_factor,
-        FilterType::Nearest,
-    );
+    let small =
+        resize(&image, width / pixelation_factor, height / pixelation_factor, FilterType::Nearest);
 
     // Then upscale it back to the original size to get the pixelated effect
     Ok(resize(&small, width, height, FilterType::Nearest))
@@ -104,11 +100,7 @@ fn find_palette(image: &Image, num_colors: usize, transparent: bool) -> Result<V
         })
         .map(|color| {
             // reduce the color to 5 bits per channel, means 15-bit color
-            Rgb([
-                (color[0] >> 3) << 3,
-                (color[1] >> 3) << 3,
-                (color[2] >> 3) << 3,
-            ])
+            Rgb([(color[0] >> 3) << 3, (color[1] >> 3) << 3, (color[2] >> 3) << 3])
         })
         .collect())
 }
@@ -137,12 +129,7 @@ fn reduce_colors(image: &mut Image, palette: &[Rgb<u8>]) {
             .min_by_key(|&color| compute_squared_distance(&color, &pixel.to_rgb()))
             .unwrap_or_else(|| Rgb([0, 0, 0]));
 
-        *pixel = Rgba([
-            closest_color[0],
-            closest_color[1],
-            closest_color[2],
-            pixel[3],
-        ]);
+        *pixel = Rgba([closest_color[0], closest_color[1], closest_color[2], pixel[3]]);
     });
 }
 
