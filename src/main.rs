@@ -7,6 +7,7 @@ use image::{
 };
 use kmeans_colors::get_kmeans;
 use palette::{cast::ComponentsAs, FromColor, Srgb, Srgba};
+use rayon::iter::{ParallelIterator, IntoParallelRefIterator};
 use tracing::info;
 use tracing_subscriber::FmtSubscriber;
 
@@ -52,7 +53,7 @@ fn main() -> Result<()> {
 /// # Returns
 ///
 /// - `Result<Image>` - A Result wrapping an Image type. On success, contains the pixelated Image.
-///    On failure, contains an Error detailing what went wrong.
+///   On failure, contains an Error detailing what went wrong.
 fn get_pixelated_image(image_path: &str, pixelation_factor: u32) -> Result<Image> {
     let image = image::open(image_path)?.into_rgba8();
     let (width, height) = (image.width(), image.height());
@@ -83,14 +84,14 @@ fn find_palette(image: &Image, num_colors: usize, transparent: bool) -> Result<V
     let img_vec: &[Srgba<u8>] = image.as_raw().components_as();
 
     let rgb_pixels = img_vec
-        .iter()
+        .par_iter()
         .filter(|&pixel| !transparent || pixel.alpha == 255)
         .map(|pixel| Srgb::<f32>::from_color(pixel.into_format::<_, f32>()))
         .collect::<Vec<_>>();
 
     Ok(get_kmeans(num_colors, 1, 5.0, false, &rgb_pixels, 0)
         .centroids
-        .iter()
+        .par_iter()
         .map(|&color| {
             Rgb([
                 (color.red * 255f32) as u8,
@@ -124,7 +125,7 @@ fn find_palette(image: &Image, num_colors: usize, transparent: bool) -> Result<V
 fn reduce_colors(image: &mut Image, palette: &[Rgb<u8>]) {
     image.enumerate_pixels_mut().for_each(|(_, _, pixel)| {
         let closest_color = palette
-            .iter()
+            .par_iter()
             .copied()
             .min_by_key(|&color| compute_squared_distance(&color, &pixel.to_rgb()))
             .unwrap_or(Rgb([0, 0, 0]));

@@ -410,6 +410,7 @@ dependencies = [
  "image 0.25.5",
  "kmeans_colors",
  "palette",
+ "rayon",
  "tracing",
  "tracing-subscriber",
 ]

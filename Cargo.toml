@@ -17,6 +17,7 @@ image = "0.25.5"
 # for calculating reduced color palettes
 kmeans_colors = "0.6.0"
 palette = "0.7.6"
+rayon = "1.10.0"
 
 # logging
 tracing = "0.1.41"
