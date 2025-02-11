@@ -52,7 +52,7 @@ fn main() -> Result<()> {
 /// # Returns
 ///
 /// - `Result<Image>` - A Result wrapping an Image type. On success, contains the pixelated Image.
-/// On failure, contains an Error detailing what went wrong.
+///    On failure, contains an Error detailing what went wrong.
 fn get_pixelated_image(image_path: &str, pixelation_factor: u32) -> Result<Image> {
     let image = image::open(image_path)?.into_rgba8();
     let (width, height) = (image.width(), image.height());
@@ -127,7 +127,7 @@ fn reduce_colors(image: &mut Image, palette: &[Rgb<u8>]) {
             .iter()
             .copied()
             .min_by_key(|&color| compute_squared_distance(&color, &pixel.to_rgb()))
-            .unwrap_or_else(|| Rgb([0, 0, 0]));
+            .unwrap_or(Rgb([0, 0, 0]));
 
         *pixel = Rgba([closest_color[0], closest_color[1], closest_color[2], pixel[3]]);
     });
