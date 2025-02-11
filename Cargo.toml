@@ -1,6 +1,6 @@
 [package]
 name = "gbc-image-transform"
-version = "0.2.2"
+version = "0.2.3"
 edition = "2021"
 description = "Generate Game Boy Color lookalike image from an image."
 
