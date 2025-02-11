@@ -26,13 +26,13 @@ fn main() -> Result<()> {
     let subscriber = FmtSubscriber::builder().finish();
     tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
 
-    info!("loading image from {}", input);
+    info!("loading image from {input}");
     let mut image = get_pixelated_image(&input, pixelation_factor)?;
     info!("finding palette");
     let palette = find_palette(&image, num_colors, transparent)?;
     info!("reducing colors");
     reduce_colors(&mut image, &palette);
-    info!("saving image to {}", output);
+    info!("saving image to {output}");
     image.save(output)?;
 
     Ok(())
