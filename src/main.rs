@@ -3,11 +3,14 @@ use anyhow::Result;
 use clap::Parser;
 use image::{
     imageops::{resize, FilterType},
-    ImageBuffer, Pixel, Rgb, Rgba,
+    ImageBuffer, Rgb, Rgba,
 };
 use kmeans_colors::get_kmeans;
 use palette::{cast::ComponentsAs, FromColor, Srgb, Srgba};
-use rayon::iter::{ParallelIterator, IntoParallelRefIterator};
+use rayon::{
+    iter::{IntoParallelRefIterator, ParallelIterator},
+};
+use rayon::slice::ParallelSliceMut;
 use tracing::info;
 use tracing_subscriber::FmtSubscriber;
 
@@ -123,14 +126,25 @@ fn find_palette(image: &Image, num_colors: usize, transparent: bool) -> Result<V
 ///
 /// If the palette is empty, all pixel colors will become black (`Rgb([0, 0, 0])`).
 fn reduce_colors(image: &mut Image, palette: &[Rgb<u8>]) {
-    image.enumerate_pixels_mut().for_each(|(_, _, pixel)| {
+    // Obtain a mutable reference to the underlying raw pixel buffer. Each pixel consists of 4 u8 channels (RGBA)
+    let raw_pixels = image.as_mut();
+
+    raw_pixels.par_chunks_mut(4).for_each(|p| {
+        // Interpret the first three bytes as the RGB values.
+        let pixel_rgb = Rgb([p[0], p[1], p[2]]);
+
+        // Iterate sequentially over the small palette to compute the closest color.
         let closest_color = palette
-            .par_iter()
+            .iter()
+            .min_by_key(|&color| compute_squared_distance(&pixel_rgb, color))
             .copied()
-            .min_by_key(|&color| compute_squared_distance(&color, &pixel.to_rgb()))
             .unwrap_or(Rgb([0, 0, 0]));
 
-        *pixel = Rgba([closest_color[0], closest_color[1], closest_color[2], pixel[3]]);
+        // Update the pixel with the closest color, leaving the alpha channel unchanged.
+        p[0] = closest_color[0];
+        p[1] = closest_color[1];
+        p[2] = closest_color[2];
+        // p[3] (alpha) remains unchanged
     });
 }
 
