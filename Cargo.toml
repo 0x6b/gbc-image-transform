@@ -1,27 +1,27 @@
 [package]
 name = "gbc-image-transform"
-version = "0.2.3"
-edition = "2021"
+version = "0.3.0"
+edition = "2024"
 description = "Generate Game Boy Color lookalike image from an image."
 
 [dependencies]
 # for easier error handling
-anyhow = "1.0.95"
+anyhow = "1.0.100"
 
 # for parsing command line arguments
-clap = { version = "4.5.28", features = ["derive"] }
+clap = { version = "4.5.54", features = ["derive"] }
 
 # for reading and writing PNG images
-image = "0.25.5"
+image = "0.25.9"
 
 # for calculating reduced color palettes
-kmeans_colors = "0.6.0"
+kmeans_colors = "0.7.1"
 palette = "0.7.6"
-rayon = "1.10.0"
+rayon = "1.11.0"
 
 # logging
-tracing = "0.1.41"
-tracing-subscriber = "0.3.19"
+tracing = "0.1.44"
+tracing-subscriber = "0.3.22"
 
 [profile.release]
 codegen-units = 1

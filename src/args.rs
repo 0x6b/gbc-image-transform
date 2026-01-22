@@ -22,4 +22,14 @@ pub struct Args {
     /// Whether to include transparent pixels in the color palette
     #[clap(short, long)]
     pub transparent: bool,
+
+    /// Width of the output image. If only width is specified, height is calculated to maintain
+    /// aspect ratio.
+    #[clap(short = 'W', long)]
+    pub width: Option<u32>,
+
+    /// Height of the output image. If only height is specified, width is calculated to maintain
+    /// aspect ratio.
+    #[clap(short = 'H', long)]
+    pub height: Option<u32>,
 }
