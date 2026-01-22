@@ -2,16 +2,17 @@ mod args;
 use anyhow::Result;
 use clap::Parser;
 use image::{
-    imageops::{resize, FilterType},
     ImageBuffer, Rgb, Rgba,
+    imageops::{FilterType, resize},
+    open,
 };
 use kmeans_colors::get_kmeans;
-use palette::{cast::ComponentsAs, FromColor, Srgb, Srgba};
+use palette::{FromColor, Srgb, Srgba, cast::ComponentsAs};
 use rayon::{
     iter::{IntoParallelRefIterator, ParallelIterator},
+    slice::ParallelSliceMut,
 };
-use rayon::slice::ParallelSliceMut;
-use tracing::info;
+use tracing::{info, subscriber::set_global_default};
 use tracing_subscriber::FmtSubscriber;
 
 use crate::args::Args;
@@ -30,7 +31,7 @@ fn main() -> Result<()> {
     } = Args::parse();
 
     let subscriber = FmtSubscriber::builder().finish();
-    tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
+    set_global_default(subscriber).expect("setting default subscriber failed");
 
     info!("loading image from {input}");
     let mut image = get_pixelated_image(&input, pixelation_factor, width, height)?;
@@ -69,7 +70,7 @@ fn get_pixelated_image(
     target_width: Option<u32>,
     target_height: Option<u32>,
 ) -> Result<Image> {
-    let image = image::open(image_path)?.into_rgba8();
+    let image = open(image_path)?.into_rgba8();
     let (orig_width, orig_height) = (image.width(), image.height());
 
     // Calculate final output dimensions
@@ -155,7 +156,8 @@ fn find_palette(image: &Image, num_colors: usize, transparent: bool) -> Result<V
 ///
 /// If the palette is empty, all pixel colors will become black (`Rgb([0, 0, 0])`).
 fn reduce_colors(image: &mut Image, palette: &[Rgb<u8>]) {
-    // Obtain a mutable reference to the underlying raw pixel buffer. Each pixel consists of 4 u8 channels (RGBA)
+    // Obtain a mutable reference to the underlying raw pixel buffer. Each pixel consists of 4 u8
+    // channels (RGBA)
     let raw_pixels = image.as_mut();
 
     raw_pixels.par_chunks_mut(4).for_each(|p| {
