@@ -25,13 +25,15 @@ fn main() -> Result<()> {
         pixelation_factor,
         num_colors,
         transparent,
+        width,
+        height,
     } = Args::parse();
 
     let subscriber = FmtSubscriber::builder().finish();
     tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
 
     info!("loading image from {input}");
-    let mut image = get_pixelated_image(&input, pixelation_factor)?;
+    let mut image = get_pixelated_image(&input, pixelation_factor, width, height)?;
     info!("finding palette");
     let palette = find_palette(&image, num_colors, transparent)?;
     info!("reducing colors");
@@ -45,28 +47,55 @@ fn main() -> Result<()> {
 /// Returns a pixelated version of an image.
 ///
 /// This function opens an image file from the given path, scales it down using the given pixelation
-/// factor, and then scales it back up to the original size to create a pixelated effect.
+/// factor, and then scales it back up to create a pixelated effect.
 ///
 /// # Arguments
 ///
 /// - `image_path` - A str representation of the path to the image file to be pixelated.
 /// - `pixelation_factor` - A u32 that represents the factor by which the image will be downscaled.
 ///   Larger values result in more pixelation.
+/// - `target_width` - Optional target width for the output image. If only width is specified,
+///   height is calculated to maintain aspect ratio.
+/// - `target_height` - Optional target height for the output image. If only height is specified,
+///   width is calculated to maintain aspect ratio.
 ///
 /// # Returns
 ///
 /// - `Result<Image>` - A Result wrapping an Image type. On success, contains the pixelated Image.
 ///   On failure, contains an Error detailing what went wrong.
-fn get_pixelated_image(image_path: &str, pixelation_factor: u32) -> Result<Image> {
+fn get_pixelated_image(
+    image_path: &str,
+    pixelation_factor: u32,
+    target_width: Option<u32>,
+    target_height: Option<u32>,
+) -> Result<Image> {
     let image = image::open(image_path)?.into_rgba8();
-    let (width, height) = (image.width(), image.height());
+    let (orig_width, orig_height) = (image.width(), image.height());
+
+    // Calculate final output dimensions
+    let (final_width, final_height) = match (target_width, target_height) {
+        (Some(w), Some(h)) => (w, h),
+        (Some(w), None) => {
+            let h = (orig_height as f64 * w as f64 / orig_width as f64).round() as u32;
+            (w, h)
+        }
+        (None, Some(h)) => {
+            let w = (orig_width as f64 * h as f64 / orig_height as f64).round() as u32;
+            (w, h)
+        }
+        (None, None) => (orig_width, orig_height),
+    };
 
     // Downscale the image to a smaller size
-    let small =
-        resize(&image, width / pixelation_factor, height / pixelation_factor, FilterType::Nearest);
+    let small = resize(
+        &image,
+        orig_width / pixelation_factor,
+        orig_height / pixelation_factor,
+        FilterType::Nearest,
+    );
 
-    // Then upscale it back to the original size to get the pixelated effect
-    Ok(resize(&small, width, height, FilterType::Nearest))
+    // Then upscale it to the final output size to get the pixelated effect
+    Ok(resize(&small, final_width, final_height, FilterType::Nearest))
 }
 
 /// This function aims to find a color palette in an image according to input conditions.
